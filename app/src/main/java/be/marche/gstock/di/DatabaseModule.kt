@@ -3,6 +3,7 @@ package be.marche.gstock.di
 import android.content.Context
 import androidx.room.Room
 import be.marche.gstock.data.local.GstockDatabase
+import be.marche.gstock.data.local.dao.AuthDao
 import be.marche.gstock.data.local.dao.CheckoutDao
 import be.marche.gstock.data.local.dao.ToolDao
 import be.marche.gstock.data.local.dao.WorkerDao
@@ -32,4 +33,7 @@ object DatabaseModule {
 
     @Provides
     fun provideCheckoutDao(db: GstockDatabase): CheckoutDao = db.checkoutDao()
+
+    @Provides
+    fun provideAuthDao(db: GstockDatabase): AuthDao = db.authDao()
 }

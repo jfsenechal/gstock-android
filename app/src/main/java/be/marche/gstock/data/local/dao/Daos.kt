@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import be.marche.gstock.data.local.entity.AuthEntity
 import be.marche.gstock.data.local.entity.CheckoutEntity
 import be.marche.gstock.data.local.entity.ToolEntity
 import be.marche.gstock.data.local.entity.WorkerEntity
@@ -44,6 +45,18 @@ interface ToolDao {
         clear()
         upsertAll(tools)
     }
+}
+
+@Dao
+interface AuthDao {
+    @Query("SELECT * FROM auth WHERE id = 0")
+    suspend fun get(): AuthEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(auth: AuthEntity)
+
+    @Query("DELETE FROM auth")
+    suspend fun clear()
 }
 
 @Dao

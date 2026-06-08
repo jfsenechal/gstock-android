@@ -4,6 +4,8 @@ import be.marche.gstock.data.remote.dto.ActionResponse
 import be.marche.gstock.data.remote.dto.CheckoutDto
 import be.marche.gstock.data.remote.dto.CheckoutRequest
 import be.marche.gstock.data.remote.dto.ListResponse
+import be.marche.gstock.data.remote.dto.LoginRequest
+import be.marche.gstock.data.remote.dto.LoginResponse
 import be.marche.gstock.data.remote.dto.ReturnRequest
 import be.marche.gstock.data.remote.dto.ScanRequest
 import be.marche.gstock.data.remote.dto.ScanResponse
@@ -16,6 +18,9 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface GstockApi {
+
+    @POST("api/login")
+    suspend fun login(@Body request: LoginRequest): LoginResponse
 
     @GET("api/user")
     suspend fun getCurrentUser(): UserDto

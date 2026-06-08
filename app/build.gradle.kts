@@ -14,7 +14,6 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 val gstockBaseUrl: String = localProperties.getProperty("gstock.base.url") ?: "https://gstock.marche.be/"
-val gstockApiToken: String = localProperties.getProperty("gstock.api.token") ?: ""
 
 android {
     namespace = "be.marche.gstock"
@@ -34,7 +33,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "GSTOCK_BASE_URL", "\"$gstockBaseUrl\"")
-        buildConfigField("String", "GSTOCK_API_TOKEN", "\"$gstockApiToken\"")
     }
 
     buildTypes {

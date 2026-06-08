@@ -33,6 +33,17 @@ data class ToolEntity(
     val createdAt: String?,
 )
 
+/** Single-row table (id is always 0) holding the logged-in user's bearer token and identity. */
+@Entity(tableName = "auth")
+data class AuthEntity(
+    @PrimaryKey val id: Int = 0,
+    val token: String,
+    val userId: Long,
+    val username: String,
+    val name: String?,
+    val email: String?,
+)
+
 @Entity(tableName = "checkouts")
 data class CheckoutEntity(
     @PrimaryKey val id: Long,

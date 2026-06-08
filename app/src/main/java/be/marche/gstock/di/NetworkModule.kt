@@ -1,6 +1,7 @@
 package be.marche.gstock.di
 
 import be.marche.gstock.BuildConfig
+import be.marche.gstock.data.auth.SessionManager
 import be.marche.gstock.data.remote.AuthInterceptor
 import be.marche.gstock.data.remote.GstockApi
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -29,7 +30,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(session: SessionManager): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {
                 HttpLoggingInterceptor.Level.BODY
@@ -38,7 +39,7 @@ object NetworkModule {
             }
         }
         return OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(BuildConfig.GSTOCK_API_TOKEN))
+            .addInterceptor(AuthInterceptor(session))
             .addInterceptor(logging)
             .build()
     }

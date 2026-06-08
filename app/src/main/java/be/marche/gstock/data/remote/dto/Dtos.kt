@@ -25,7 +25,21 @@ data class UserDto(
     val username: String? = null,
     @SerialName("first_name") val firstName: String? = null,
     @SerialName("last_name") val lastName: String? = null,
+    val name: String? = null,
     val email: String? = null,
+)
+
+@Serializable
+data class LoginRequest(
+    val username: String,
+    val password: String,
+    @SerialName("device_name") val deviceName: String,
+)
+
+@Serializable
+data class LoginResponse(
+    val token: String,
+    val user: UserDto,
 )
 
 @Serializable
@@ -144,9 +158,22 @@ data class ScanData(
     val tool: ToolDto? = null,
 )
 
+/**
+ * Envelope for the checkout / return endpoints. Like the scan endpoints, the affected checkout is
+ * nested under `data` (`{ "success":…, "data": { "checkout": … } }`); the `checkout` accessor
+ * also falls back to a top-level field in case an endpoint returns it un-nested.
+ */
 @Serializable
 data class ActionResponse(
     val success: Boolean = false,
     val message: String? = null,
+    val data: ActionData? = null,
+    @SerialName("checkout") val checkoutTopLevel: CheckoutDto? = null,
+) {
+    val checkout: CheckoutDto? get() = data?.checkout ?: checkoutTopLevel
+}
+
+@Serializable
+data class ActionData(
     val checkout: CheckoutDto? = null,
 )
