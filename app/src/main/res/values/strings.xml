@@ -1,3 +1,87 @@
 <resources>
     <string name="app_name">Gstock</string>
+
+    <!-- Navigation -->
+    <string name="nav_checkout">Check out</string>
+    <string name="nav_catalog">Catalog</string>
+    <string name="nav_checkouts">Checkouts</string>
+    <string name="nav_account">Account</string>
+    <string name="action_sign_out">Sign out</string>
+
+    <!-- Common -->
+    <string name="action_retry">Retry</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="action_return">Return</string>
+
+    <!-- Login -->
+    <string name="login_subtitle">Sign in to continue</string>
+    <string name="login_username">Username</string>
+    <string name="login_password">Password</string>
+    <string name="login_show_password">Show password</string>
+    <string name="login_hide_password">Hide password</string>
+    <string name="login_sign_in">Sign in</string>
+    <string name="login_error_empty">Enter your username and password</string>
+
+    <!-- Account -->
+    <string name="account_appearance">Appearance</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+
+    <!-- Catalog -->
+    <string name="catalog_tab_workers">Workers</string>
+    <string name="catalog_tab_tools">Tools</string>
+
+    <!-- Checkout flow -->
+    <string name="checkout_step1_title">Step 1 — Scan worker badge</string>
+    <string name="checkout_step1_instruction">Point the camera at the worker\'s QR code.</string>
+    <string name="checkout_step2_title">Step 2 — Scan tools</string>
+    <string name="checkout_worker">Worker: %1$s</string>
+    <string name="checkout_step2_instruction">Scan each tool\'s QR code, then tap Finished.</string>
+    <string name="checkout_tools_to_checkout">Tools to check out (%1$d)</string>
+    <string name="checkout_no_tools_scanned">No tools scanned yet.</string>
+    <plurals name="checkout_finish">
+        <item quantity="one">Finished — check out %1$d tool</item>
+        <item quantity="other">Finished — check out %1$d tools</item>
+    </plurals>
+    <string name="checkout_remove_tool">Remove %1$s</string>
+    <string name="checkout_reserved_title">Tool already reserved</string>
+    <string name="checkout_reserved_message">\"%1$s\" is already checked out and cannot be added to this checkout. It was not added.</string>
+    <string name="checkout_done_default">Done</string>
+    <string name="checkout_new">New checkout</string>
+    <string name="checkout_view">View checkouts</string>
+    <string name="checkout_error_not_worker">That is not a worker badge. Scan a worker QR code.</string>
+    <string name="checkout_error_worker_not_recognised">Worker not recognised</string>
+    <string name="checkout_error_not_tool">That is not a tool. Scan a tool QR code.</string>
+    <string name="checkout_error_tool_in_list">That tool is already in the list.</string>
+    <string name="checkout_error_tool_not_recognised">Tool not recognised</string>
+
+    <!-- Checkouts list -->
+    <string name="filter_all">All</string>
+    <string name="filter_active">Active</string>
+    <string name="filter_returned">Returned</string>
+    <string name="filter_overdue">Overdue</string>
+    <string name="checkouts_empty">No checkouts</string>
+    <string name="checkout_tool_fallback">Tool #%1$s</string>
+    <string name="checkout_unknown">?</string>
+    <string name="checkout_worker_value">Worker: %1$s</string>
+    <string name="checkout_out">Out: %1$s</string>
+    <string name="checkout_due">Due: %1$s</string>
+    <string name="status_returned">Returned</string>
+    <string name="status_overdue">Overdue</string>
+    <string name="status_active">Active</string>
+    <string name="checkouts_returned_message">Tool returned</string>
+
+    <!-- Tools -->
+    <string name="search_tools">Search tools</string>
+    <string name="tools_available_only">Available only</string>
+    <string name="tools_empty">No tools found</string>
+    <string name="tool_available">Available</string>
+    <string name="tool_unavailable">Unavailable</string>
+
+    <!-- Workers -->
+    <string name="search_workers">Search workers</string>
+    <string name="workers_empty">No workers found</string>
+    <string name="worker_out_badge">%1$d out</string>
 </resources>

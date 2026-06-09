@@ -1,10 +1,13 @@
 package be.marche.gstock.ui.auth
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import be.marche.gstock.R
 import be.marche.gstock.core.ApiResult
 import be.marche.gstock.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +25,7 @@ data class LoginUiState(
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val repository: AuthRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -36,7 +40,7 @@ class LoginViewModel @Inject constructor(
         val state = _uiState.value
         if (state.isLoading) return
         if (state.username.isBlank() || state.password.isBlank()) {
-            _uiState.update { it.copy(error = "Enter your username and password") }
+            _uiState.update { it.copy(error = context.getString(R.string.login_error_empty)) }
             return
         }
         viewModelScope.launch {

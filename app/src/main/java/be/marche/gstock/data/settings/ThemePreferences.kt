@@ -1,7 +1,9 @@
 package be.marche.gstock.data.settings
 
 import android.content.Context
+import androidx.annotation.StringRes
 import androidx.core.content.edit
+import be.marche.gstock.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,10 +12,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /** How the app resolves its light/dark color scheme. */
-enum class ThemeMode(val label: String) {
-    SYSTEM("System default"),
-    LIGHT("Light"),
-    DARK("Dark"),
+enum class ThemeMode(@param:StringRes val labelRes: Int) {
+    SYSTEM(R.string.theme_system),
+    LIGHT(R.string.theme_light),
+    DARK(R.string.theme_dark),
 }
 
 /**

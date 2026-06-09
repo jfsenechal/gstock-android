@@ -14,10 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import be.marche.gstock.R
 import be.marche.gstock.data.settings.ThemeMode
 
 @Composable
@@ -26,7 +28,7 @@ fun AccountScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         Text(
-            "Appearance",
+            stringResource(R.string.account_appearance),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp),
         )
@@ -48,7 +50,7 @@ fun AccountScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                         onClick = null,
                     )
                     Text(
-                        mode.label,
+                        stringResource(mode.labelRes),
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(start = 16.dp),
                     )

@@ -26,9 +26,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import be.marche.gstock.R
 import be.marche.gstock.data.local.entity.CheckoutEntity
 import be.marche.gstock.ui.common.LoadingBox
 import be.marche.gstock.ui.common.MessageBox
@@ -58,7 +60,7 @@ fun CheckoutsScreen(viewModel: CheckoutsViewModel = hiltViewModel()) {
                 FilterChip(
                     selected = state.filter == f,
                     onClick = { viewModel.onFilterChange(f) },
-                    label = { Text(f.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                    label = { Text(stringResource(f.labelRes)) },
                 )
             }
         }
@@ -68,7 +70,7 @@ fun CheckoutsScreen(viewModel: CheckoutsViewModel = hiltViewModel()) {
                 state.isLoading && state.checkouts.isEmpty() -> LoadingBox()
                 state.error != null && state.checkouts.isEmpty() ->
                     MessageBox(state.error!!, onRetry = viewModel::refresh)
-                state.checkouts.isEmpty() -> MessageBox("No checkouts", onRetry = viewModel::refresh)
+                state.checkouts.isEmpty() -> MessageBox(stringResource(R.string.checkouts_empty), onRetry = viewModel::refresh)
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(state.checkouts, key = { it.id }) { checkout ->
                         CheckoutRow(
@@ -99,19 +101,23 @@ private fun CheckoutRow(
             .padding(horizontal = 16.dp, vertical = 6.dp),
     ) {
         Column(Modifier.padding(16.dp)) {
+            val unknown = stringResource(R.string.checkout_unknown)
             Text(
-                checkout.toolName ?: "Tool #${checkout.toolId ?: "?"}",
+                checkout.toolName ?: stringResource(R.string.checkout_tool_fallback, checkout.toolId ?: unknown),
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                "Worker: ${checkout.workerName ?: checkout.workerId?.toString() ?: "?"}",
+                stringResource(
+                    R.string.checkout_worker_value,
+                    checkout.workerName ?: checkout.workerId?.toString() ?: unknown,
+                ),
                 style = MaterialTheme.typography.bodyMedium,
             )
             checkout.checkedOutAt?.let {
-                Text("Out: $it", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.checkout_out, it), style = MaterialTheme.typography.bodySmall)
             }
             checkout.dueAt?.let {
-                Text("Due: $it", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.checkout_due, it), style = MaterialTheme.typography.bodySmall)
             }
             Row(
                 Modifier
@@ -121,9 +127,9 @@ private fun CheckoutRow(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 val statusText = when {
-                    checkout.isReturned -> "Returned"
-                    checkout.isOverdue -> "Overdue"
-                    else -> "Active"
+                    checkout.isReturned -> stringResource(R.string.status_returned)
+                    checkout.isOverdue -> stringResource(R.string.status_overdue)
+                    else -> stringResource(R.string.status_active)
                 }
                 Text(statusText, style = MaterialTheme.typography.labelLarge)
                 if (!checkout.isReturned) {
@@ -131,7 +137,7 @@ private fun CheckoutRow(
                         if (isReturning) {
                             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                         } else {
-                            Text("Return")
+                            Text(stringResource(R.string.action_return))
                         }
                     }
                 }

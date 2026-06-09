@@ -11,15 +11,16 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import be.marche.gstock.R
 import be.marche.gstock.ui.tools.ToolsScreen
 import be.marche.gstock.ui.workers.WorkersScreen
-
-private val tabs = listOf("Workers", "Tools")
 
 /** Groups the Workers and Tools lists behind a single bottom-bar destination, switched via tabs. */
 @Composable
 fun CatalogScreen() {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    val tabs = listOf(R.string.catalog_tab_workers, R.string.catalog_tab_tools)
 
     Column(Modifier.fillMaxSize()) {
         TabRow(selectedTabIndex = selectedTab) {
@@ -27,7 +28,7 @@ fun CatalogScreen() {
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = { Text(title) },
+                    text = { Text(stringResource(title)) },
                 )
             }
         }

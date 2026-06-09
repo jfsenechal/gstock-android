@@ -27,10 +27,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import be.marche.gstock.R
 import be.marche.gstock.data.remote.dto.ToolDto
 import be.marche.gstock.ui.scan.QrScannerView
 
@@ -44,8 +47,8 @@ fun CheckoutScreen(
     Box(Modifier.fillMaxSize()) {
         when (state.step) {
             CheckoutStep.SCAN_WORKER -> ScanStep(
-                title = "Step 1 — Scan worker badge",
-                instruction = "Point the camera at the worker's QR code.",
+                title = stringResource(R.string.checkout_step1_title),
+                instruction = stringResource(R.string.checkout_step1_instruction),
                 isProcessing = state.isProcessing,
                 error = state.error,
                 onScanned = viewModel::onWorkerScanned,
@@ -60,7 +63,7 @@ fun CheckoutScreen(
             )
 
             CheckoutStep.DONE -> DoneStep(
-                message = state.resultMessage ?: "Done",
+                message = state.resultMessage ?: stringResource(R.string.checkout_done_default),
                 onNewCheckout = viewModel::reset,
                 onViewCheckouts = {
                     viewModel.reset()
@@ -121,9 +124,9 @@ private fun ScanToolsStep(
     val workerName = state.worker?.let { "${it.firstName} ${it.lastName}" } ?: ""
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(16.dp)) {
-            Text("Step 2 — Scan tools", style = MaterialTheme.typography.titleLarge)
-            Text("Worker: $workerName", style = MaterialTheme.typography.bodyMedium)
-            Text("Scan each tool's QR code, then tap Finished.", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.checkout_step2_title), style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.checkout_worker, workerName), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.checkout_step2_instruction), style = MaterialTheme.typography.bodyMedium)
             if (state.error != null) {
                 Text(
                     state.error,
@@ -153,12 +156,12 @@ private fun ScanToolsStep(
 
         Column(Modifier.padding(16.dp)) {
             Text(
-                "Tools to check out (${state.tools.size})",
+                stringResource(R.string.checkout_tools_to_checkout, state.tools.size),
                 style = MaterialTheme.typography.titleMedium,
             )
             if (state.tools.isEmpty()) {
                 Text(
-                    "No tools scanned yet.",
+                    stringResource(R.string.checkout_no_tools_scanned),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
@@ -181,7 +184,7 @@ private fun ScanToolsStep(
                 enabled = state.tools.isNotEmpty() && !state.isProcessing,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Finished — check out ${state.tools.size} tool${if (state.tools.size > 1) "s" else ""}")
+                Text(pluralStringResource(R.plurals.checkout_finish, state.tools.size, state.tools.size))
             }
             OutlinedButton(
                 onClick = onCancel,
@@ -190,7 +193,7 @@ private fun ScanToolsStep(
                     .fillMaxWidth()
                     .padding(top = 8.dp),
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     }
@@ -213,7 +216,7 @@ private fun ToolRow(tool: ToolDto, onRemove: () -> Unit) {
                     ?.let { Text(it.joinToString(" · "), style = MaterialTheme.typography.bodySmall) }
             }
             IconButton(onClick = onRemove) {
-                Icon(Icons.Default.Close, contentDescription = "Remove ${tool.name}")
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.checkout_remove_tool, tool.name))
             }
         }
     }
@@ -223,15 +226,12 @@ private fun ToolRow(tool: ToolDto, onRemove: () -> Unit) {
 private fun ReservedToolDialog(tool: ToolDto, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Tool already reserved") },
+        title = { Text(stringResource(R.string.checkout_reserved_title)) },
         text = {
-            Text(
-                "\"${tool.name}\" is already checked out and cannot be added to this checkout. " +
-                    "It was not added.",
-            )
+            Text(stringResource(R.string.checkout_reserved_message, tool.name))
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("OK") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) }
         },
     )
 }
@@ -255,10 +255,10 @@ private fun DoneStep(
             textAlign = TextAlign.Center,
         )
         Button(onClick = onNewCheckout, modifier = Modifier.fillMaxWidth()) {
-            Text("New checkout")
+            Text(stringResource(R.string.checkout_new))
         }
         OutlinedButton(onClick = onViewCheckouts, modifier = Modifier.fillMaxWidth()) {
-            Text("View checkouts")
+            Text(stringResource(R.string.checkout_view))
         }
     }
 }

@@ -14,7 +14,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import be.marche.gstock.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -48,9 +50,9 @@ private fun MainScaffold(onLogout: () -> Unit) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination
-    val title = Destination.entries
+    val currentDestination = Destination.entries
         .firstOrNull { dest -> currentRoute?.hierarchy?.any { it.route == dest.route } == true }
-        ?.label ?: "Gstock"
+    val title = currentDestination?.let { stringResource(it.labelRes) } ?: stringResource(R.string.app_name)
 
     Scaffold(
         topBar = {
@@ -58,7 +60,10 @@ private fun MainScaffold(onLogout: () -> Unit) {
                 title = { Text(title) },
                 actions = {
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Sign out")
+                        Icon(
+                            Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = stringResource(R.string.action_sign_out),
+                        )
                     }
                 },
             )
@@ -78,8 +83,13 @@ private fun MainScaffold(onLogout: () -> Unit) {
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(destination.icon, contentDescription = destination.label) },
-                        label = { Text(destination.label) },
+                        icon = {
+                            Icon(
+                                destination.icon,
+                                contentDescription = stringResource(destination.labelRes),
+                            )
+                        },
+                        label = { Text(stringResource(destination.labelRes)) },
                     )
                 }
             }

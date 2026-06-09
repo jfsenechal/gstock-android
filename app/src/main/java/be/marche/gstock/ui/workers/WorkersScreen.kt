@@ -16,10 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import be.marche.gstock.R
 import be.marche.gstock.data.local.entity.WorkerEntity
 import be.marche.gstock.ui.common.LoadingBox
 import be.marche.gstock.ui.common.MessageBox
@@ -33,7 +35,7 @@ fun WorkersScreen(viewModel: WorkersViewModel = hiltViewModel()) {
         SearchField(
             value = state.query,
             onValueChange = viewModel::onQueryChange,
-            placeholder = "Search workers",
+            placeholder = stringResource(R.string.search_workers),
             onSearch = viewModel::refresh,
         )
         Box(Modifier.fillMaxSize()) {
@@ -41,7 +43,7 @@ fun WorkersScreen(viewModel: WorkersViewModel = hiltViewModel()) {
                 state.isLoading && state.workers.isEmpty() -> LoadingBox()
                 state.error != null && state.workers.isEmpty() ->
                     MessageBox(state.error!!, onRetry = viewModel::refresh)
-                state.workers.isEmpty() -> MessageBox("No workers found")
+                state.workers.isEmpty() -> MessageBox(stringResource(R.string.workers_empty))
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(state.workers, key = { it.id }) { worker ->
                         WorkerRow(worker)
@@ -70,7 +72,7 @@ private fun WorkerRow(worker: WorkerEntity) {
                     maxLines = 1,
                 )
                 if (worker.activeCheckoutsCount > 0) {
-                    Badge { Text("${worker.activeCheckoutsCount} out") }
+                    Badge { Text(stringResource(R.string.worker_out_badge, worker.activeCheckoutsCount)) }
                 }
             }
             worker.phone?.takeIf { it.isNotBlank() }?.let {

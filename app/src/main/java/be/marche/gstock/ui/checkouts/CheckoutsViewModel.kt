@@ -1,11 +1,15 @@
 package be.marche.gstock.ui.checkouts
 
+import android.content.Context
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import be.marche.gstock.R
 import be.marche.gstock.core.ApiResult
 import be.marche.gstock.data.local.entity.CheckoutEntity
 import be.marche.gstock.data.repository.CheckoutRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +19,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class CheckoutFilter { ALL, ACTIVE, RETURNED, OVERDUE }
+enum class CheckoutFilter(@param:StringRes val labelRes: Int) {
+    ALL(R.string.filter_all),
+    ACTIVE(R.string.filter_active),
+    RETURNED(R.string.filter_returned),
+    OVERDUE(R.string.filter_overdue),
+}
 
 data class CheckoutsUiState(
     val checkouts: List<CheckoutEntity> = emptyList(),
@@ -29,6 +38,7 @@ data class CheckoutsUiState(
 @HiltViewModel
 class CheckoutsViewModel @Inject constructor(
     private val repository: CheckoutRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val filter = MutableStateFlow(CheckoutFilter.ALL)
@@ -87,7 +97,7 @@ class CheckoutsViewModel @Inject constructor(
             status.update {
                 when (result) {
                     is ApiResult.Success ->
-                        it.copy(returningId = null, message = result.data.message ?: "Tool returned")
+                        it.copy(returningId = null, message = result.data.message ?: context.getString(R.string.checkouts_returned_message))
                     is ApiResult.Error ->
                         it.copy(returningId = null, error = result.message)
                 }

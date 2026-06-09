@@ -18,10 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import be.marche.gstock.R
 import be.marche.gstock.data.local.entity.ToolEntity
 import be.marche.gstock.ui.common.LoadingBox
 import be.marche.gstock.ui.common.MessageBox
@@ -35,13 +37,13 @@ fun ToolsScreen(viewModel: ToolsViewModel = hiltViewModel()) {
         SearchField(
             value = state.query,
             onValueChange = viewModel::onQueryChange,
-            placeholder = "Search tools",
+            placeholder = stringResource(R.string.search_tools),
             onSearch = viewModel::refresh,
         )
         FilterChip(
             selected = state.onlyAvailable,
             onClick = viewModel::toggleOnlyAvailable,
-            label = { Text("Available only") },
+            label = { Text(stringResource(R.string.tools_available_only)) },
             modifier = Modifier.padding(horizontal = 16.dp),
         )
         Box(Modifier.fillMaxSize()) {
@@ -49,7 +51,7 @@ fun ToolsScreen(viewModel: ToolsViewModel = hiltViewModel()) {
                 state.isLoading && state.tools.isEmpty() -> LoadingBox()
                 state.error != null && state.tools.isEmpty() ->
                     MessageBox(state.error!!, onRetry = viewModel::refresh)
-                state.tools.isEmpty() -> MessageBox("No tools found")
+                state.tools.isEmpty() -> MessageBox(stringResource(R.string.tools_empty))
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(state.tools, key = { it.id }) { tool ->
                         ToolRow(tool)
@@ -80,7 +82,12 @@ private fun ToolRow(tool: ToolEntity) {
                 AssistChip(
                     onClick = {},
                     enabled = false,
-                    label = { Text(if (tool.isAvailable) "Available" else (tool.status ?: "Unavailable")) },
+                    label = {
+                        Text(
+                            if (tool.isAvailable) stringResource(R.string.tool_available)
+                            else (tool.status ?: stringResource(R.string.tool_unavailable)),
+                        )
+                    },
                 )
             }
             listOfNotNull(tool.manufacturer, tool.model)

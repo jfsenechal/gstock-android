@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import be.marche.gstock.R
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
@@ -52,11 +54,11 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            "Gstock",
+            stringResource(R.string.app_name),
             style = MaterialTheme.typography.headlineMedium,
         )
         Text(
-            "Sign in to continue",
+            stringResource(R.string.login_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
         )
@@ -64,7 +66,7 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
         OutlinedTextField(
             value = state.username,
             onValueChange = viewModel::onUsernameChange,
-            label = { Text("Username") },
+            label = { Text(stringResource(R.string.login_username)) },
             singleLine = true,
             enabled = !state.isLoading,
             keyboardOptions = KeyboardOptions(
@@ -76,7 +78,7 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
         OutlinedTextField(
             value = state.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("Password") },
+            label = { Text(stringResource(R.string.login_password)) },
             singleLine = true,
             enabled = !state.isLoading,
             visualTransformation = if (passwordVisible) {
@@ -92,7 +94,9 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
                         } else {
                             Icons.Filled.Visibility
                         },
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        contentDescription = stringResource(
+                            if (passwordVisible) R.string.login_hide_password else R.string.login_show_password,
+                        ),
                     )
                 }
             },
@@ -121,7 +125,7 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
             if (state.isLoading) {
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
             } else {
-                Text("Sign in")
+                Text(stringResource(R.string.login_sign_in))
             }
         }
     }

@@ -1,7 +1,9 @@
 package be.marche.gstock.ui.checkout
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import be.marche.gstock.R
 import be.marche.gstock.core.ApiResult
 import be.marche.gstock.core.GstockCode
 import be.marche.gstock.core.GstockQr
@@ -10,6 +12,7 @@ import be.marche.gstock.data.remote.dto.WorkerDto
 import be.marche.gstock.data.repository.CheckoutRepository
 import be.marche.gstock.data.repository.ScanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,6 +38,7 @@ data class CheckoutUiState(
 class CheckoutViewModel @Inject constructor(
     private val scanRepository: ScanRepository,
     private val checkoutRepository: CheckoutRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CheckoutUiState())
@@ -44,7 +48,7 @@ class CheckoutViewModel @Inject constructor(
         if (_uiState.value.isProcessing) return
         val code = GstockQr.parse(qrData)
         if (code !is GstockCode.Worker) {
-            _uiState.update { it.copy(error = "That is not a worker badge. Scan a worker QR code.") }
+            _uiState.update { it.copy(error = context.getString(R.string.checkout_error_not_worker)) }
             return
         }
         viewModelScope.launch {
@@ -53,7 +57,7 @@ class CheckoutViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     val worker = result.data.worker
                     if (worker == null) {
-                        _uiState.update { it.copy(isProcessing = false, error = "Worker not recognised") }
+                        _uiState.update { it.copy(isProcessing = false, error = context.getString(R.string.checkout_error_worker_not_recognised)) }
                     } else {
                         _uiState.update {
                             it.copy(isProcessing = false, worker = worker, step = CheckoutStep.SCAN_TOOLS)
@@ -70,11 +74,11 @@ class CheckoutViewModel @Inject constructor(
         if (_uiState.value.isProcessing || _uiState.value.reservedTool != null) return
         val code = GstockQr.parse(qrData)
         if (code !is GstockCode.Tool) {
-            _uiState.update { it.copy(error = "That is not a tool. Scan a tool QR code.") }
+            _uiState.update { it.copy(error = context.getString(R.string.checkout_error_not_tool)) }
             return
         }
         if (_uiState.value.tools.any { it.id == code.id }) {
-            _uiState.update { it.copy(error = "That tool is already in the list.") }
+            _uiState.update { it.copy(error = context.getString(R.string.checkout_error_tool_in_list)) }
             return
         }
         viewModelScope.launch {
@@ -84,7 +88,7 @@ class CheckoutViewModel @Inject constructor(
                     val tool = result.data.tool
                     when {
                         tool == null ->
-                            _uiState.update { it.copy(isProcessing = false, error = "Tool not recognised") }
+                            _uiState.update { it.copy(isProcessing = false, error = context.getString(R.string.checkout_error_tool_not_recognised)) }
                         tool.isCheckedOut || !tool.isAvailable ->
                             // Already reserved: surface a blocking alert and do not add it.
                             _uiState.update { it.copy(isProcessing = false, reservedTool = tool) }
