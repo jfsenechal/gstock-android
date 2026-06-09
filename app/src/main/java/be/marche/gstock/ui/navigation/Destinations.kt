@@ -12,8 +12,8 @@ enum class Destination(
     val label: String,
     val icon: ImageVector,
 ) {
-    Checkout("checkout", "Check out", Icons.Filled.QrCodeScanner),
-    Catalog("catalog", "Catalog", Icons.Filled.Inventory2),
     Checkouts("checkouts", "Checkouts", Icons.AutoMirrored.Filled.Assignment),
+    Catalog("catalog", "Catalog", Icons.Filled.Inventory2),
+    Checkout("checkout", "Check out", Icons.Filled.QrCodeScanner),
     Account("account", "Account", Icons.Filled.AccountCircle),
 }
