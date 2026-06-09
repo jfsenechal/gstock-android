@@ -41,7 +41,7 @@
     <string name="checkout_step1_title">Étape 1 — Scanner le badge de l\'ouvrier</string>
     <string name="checkout_step1_instruction">Pointez la caméra vers le code QR de l\'ouvrier.</string>
     <string name="checkout_step2_title">Étape 2 — Scanner les outils</string>
-    <string name="checkout_worker">Ouvrier : %1$s</string>
+    <string name="checkout_worker_label">Emprunt au nom de</string>
     <string name="checkout_step2_instruction">Scannez le code QR de chaque outil, puis appuyez sur Terminé.</string>
     <string name="checkout_tools_to_checkout">Outils à sortir (%1$d)</string>
     <string name="checkout_no_tools_scanned">Aucun outil scanné pour l\'instant.</string>

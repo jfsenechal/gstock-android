@@ -1,5 +1,6 @@
 package be.marche.gstock.ui.checkout
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,11 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import be.marche.gstock.R
 import be.marche.gstock.data.remote.dto.ToolDto
+import be.marche.gstock.data.remote.dto.WorkerDto
 import be.marche.gstock.ui.scan.QrScannerView
 
 @Composable
@@ -121,11 +126,13 @@ private fun ScanToolsStep(
     onFinish: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    val workerName = state.worker?.let { "${it.firstName} ${it.lastName}" } ?: ""
     Column(Modifier.fillMaxSize()) {
-        Column(Modifier.padding(16.dp)) {
+        Column(
+            Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            state.worker?.let { WorkerHeaderCard(it) }
             Text(stringResource(R.string.checkout_step2_title), style = MaterialTheme.typography.titleLarge)
-            Text(stringResource(R.string.checkout_worker, workerName), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.checkout_step2_instruction), style = MaterialTheme.typography.bodyMedium)
             if (state.error != null) {
                 Text(
@@ -194,6 +201,57 @@ private fun ScanToolsStep(
                     .padding(top = 8.dp),
             ) {
                 Text(stringResource(R.string.action_cancel))
+            }
+        }
+    }
+}
+
+/** Prominent banner showing which worker the scanned tools will be checked out to. */
+@Composable
+private fun WorkerHeaderCard(worker: WorkerDto) {
+    val fullName = "${worker.firstName} ${worker.lastName}".trim()
+    val initials = listOf(worker.firstName, worker.lastName)
+        .mapNotNull { it.trim().firstOrNull()?.uppercaseChar() }
+        .joinToString("")
+        .ifBlank { "?" }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Box(
+                Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    initials,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+            Column(Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.checkout_worker_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Text(
+                    fullName,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
             }
         }
     }

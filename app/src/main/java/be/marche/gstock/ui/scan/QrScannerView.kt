@@ -88,7 +88,13 @@ private fun CameraPreview(
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->
-                val previewView = PreviewView(ctx)
+                val previewView = PreviewView(ctx).apply {
+                    // COMPATIBLE (TextureView) instead of the default PERFORMANCE (SurfaceView):
+                    // a SurfaceView renders in its own window and paints over adjacent Compose UI
+                    // (e.g. the worker banner above the preview), making it disappear. A TextureView
+                    // composes normally in the view hierarchy, so surrounding UI stays visible.
+                    implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                }
                 val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
                 cameraProviderFuture.addListener({
                     val cameraProvider = cameraProviderFuture.get()
