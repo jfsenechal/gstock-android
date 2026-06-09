@@ -28,6 +28,10 @@
     <string name="theme_system">System default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="account_language">Language</string>
+    <string name="language_system">System default</string>
+    <string name="language_english">English</string>
+    <string name="language_french">French</string>
 
     <!-- Catalog -->
     <string name="catalog_tab_workers">Workers</string>

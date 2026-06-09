@@ -2,9 +2,9 @@
     <string name="app_name">Gstock</string>
 
     <!-- Navigation -->
-    <string name="nav_checkout">Sortie</string>
+    <string name="nav_checkout">Emprunt</string>
     <string name="nav_catalog">Catalogue</string>
-    <string name="nav_checkouts">Sorties</string>
+    <string name="nav_checkouts">Emprunts</string>
     <string name="nav_account">Compte</string>
     <string name="action_sign_out">Se déconnecter</string>
 
@@ -28,6 +28,10 @@
     <string name="theme_system">Système</string>
     <string name="theme_light">Clair</string>
     <string name="theme_dark">Sombre</string>
+    <string name="account_language">Langue</string>
+    <string name="language_system">Système</string>
+    <string name="language_english">Anglais</string>
+    <string name="language_french">Français</string>
 
     <!-- Catalog -->
     <string name="catalog_tab_workers">Ouvriers</string>
@@ -47,10 +51,10 @@
     </plurals>
     <string name="checkout_remove_tool">Retirer %1$s</string>
     <string name="checkout_reserved_title">Outil déjà réservé</string>
-    <string name="checkout_reserved_message">« %1$s » est déjà sorti et ne peut pas être ajouté à cette sortie. Il n\'a pas été ajouté.</string>
+    <string name="checkout_reserved_message">« %1$s » est déjà sorti et ne peut pas être ajouté à cet emprunt. Il n\'a pas été ajouté.</string>
     <string name="checkout_done_default">Terminé</string>
-    <string name="checkout_new">Nouvelle sortie</string>
-    <string name="checkout_view">Voir les sorties</string>
+    <string name="checkout_new">Nouvel emprunt</string>
+    <string name="checkout_view">Voir les emprunts</string>
     <string name="checkout_error_not_worker">Ce n\'est pas un badge d\'ouvrier. Scannez un code QR d\'ouvrier.</string>
     <string name="checkout_error_worker_not_recognised">Ouvrier non reconnu</string>
     <string name="checkout_error_not_tool">Ce n\'est pas un outil. Scannez un code QR d\'outil.</string>
@@ -62,7 +66,7 @@
     <string name="filter_active">Actifs</string>
     <string name="filter_returned">Retournés</string>
     <string name="filter_overdue">En retard</string>
-    <string name="checkouts_empty">Aucune sortie</string>
+    <string name="checkouts_empty">Aucun emprunt</string>
     <string name="checkout_tool_fallback">Outil n°%1$s</string>
     <string name="checkout_unknown">?</string>
     <string name="checkout_worker_value">Ouvrier : %1$s</string>
