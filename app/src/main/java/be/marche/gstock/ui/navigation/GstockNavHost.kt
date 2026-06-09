@@ -25,11 +25,11 @@ import androidx.navigation.compose.rememberNavController
 import be.marche.gstock.data.auth.AuthState
 import be.marche.gstock.ui.auth.AuthViewModel
 import be.marche.gstock.ui.auth.LoginScreen
+import be.marche.gstock.ui.account.AccountScreen
+import be.marche.gstock.ui.catalog.CatalogScreen
 import be.marche.gstock.ui.checkout.CheckoutScreen
 import be.marche.gstock.ui.checkouts.CheckoutsScreen
 import be.marche.gstock.ui.common.LoadingBox
-import be.marche.gstock.ui.tools.ToolsScreen
-import be.marche.gstock.ui.workers.WorkersScreen
 
 @Composable
 fun GstockApp(authViewModel: AuthViewModel = hiltViewModel()) {
@@ -87,12 +87,9 @@ private fun MainScaffold(onLogout: () -> Unit) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Destination.Workers.route,
+            startDestination = Destination.Checkouts.route,
             modifier = Modifier.padding(innerPadding),
         ) {
-            composable(Destination.Workers.route) { WorkersScreen() }
-            composable(Destination.Tools.route) { ToolsScreen() }
-            composable(Destination.Checkouts.route) { CheckoutsScreen() }
             composable(Destination.Checkout.route) {
                 CheckoutScreen(
                     onFinished = {
@@ -103,6 +100,9 @@ private fun MainScaffold(onLogout: () -> Unit) {
                     },
                 )
             }
+            composable(Destination.Catalog.route) { CatalogScreen() }
+            composable(Destination.Checkouts.route) { CheckoutsScreen() }
+            composable(Destination.Account.route) { AccountScreen() }
         }
     }
 }
