@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -84,7 +85,10 @@ private fun CameraPreview(
         onDispose { analysisExecutor.shutdown() }
     }
 
-    Box(modifier.fillMaxSize()) {
+    // clipToBounds() is essential: PreviewView scales the preview (FILL_CENTER) so the inner
+    // TextureView is larger than this box and centered, which otherwise paints the camera image
+    // over the composables above and below it (e.g. the worker banner and the cart).
+    Box(modifier.fillMaxSize().clipToBounds()) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->

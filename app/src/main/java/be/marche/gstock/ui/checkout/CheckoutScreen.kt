@@ -3,16 +3,17 @@ package be.marche.gstock.ui.checkout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
@@ -163,92 +164,104 @@ private fun ScanToolsStep(
     onFinish: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize()) {
+    // Measure the real viewport (BoxWithConstraints isn't affected by the inner scroll) so the
+    // camera can take a responsive share of it instead of a greedy weight that collapses — and
+    // overlaps neighbouring content — once the fixed sections no longer fit on shorter screens.
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val cameraHeight = (maxHeight * 0.4f).coerceIn(200.dp, 360.dp)
+
+        // The whole step scrolls so nothing can overlap when the content is taller than the screen.
         Column(
-            Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            state.worker?.let { WorkerHeaderCard(it) }
-            Text(stringResource(R.string.checkout_step2_title), style = MaterialTheme.typography.titleLarge)
-            Text(stringResource(R.string.checkout_step2_instruction), style = MaterialTheme.typography.bodyMedium)
-            if (state.error != null) {
-                Text(
-                    state.error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-            }
-        }
-
-        // Camera occupies the upper half so the cart stays visible.
-        Box(
             Modifier
-                .fillMaxWidth()
-                .weight(1f),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
         ) {
-            if (LocalInspectionMode.current) {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text("QR Scanner Placeholder")
-                }
-            } else {
-                QrScannerView(
-                    onQrScanned = onScanned,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-            if (state.isProcessing) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+            Column(
+                Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                state.worker?.let { WorkerHeaderCard(it) }
+                Text(stringResource(R.string.checkout_step2_title), style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.checkout_step2_instruction), style = MaterialTheme.typography.bodyMedium)
+                if (state.error != null) {
+                    Text(
+                        state.error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
                 }
             }
-        }
 
-        Column(Modifier.padding(16.dp)) {
-            Text(
-                stringResource(R.string.checkout_tools_to_checkout, state.tools.size),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            if (state.tools.isEmpty()) {
-                Text(
-                    stringResource(R.string.checkout_no_tools_scanned),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 8.dp),
-                )
-            } else {
-                LazyColumn(
-                    Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 180.dp)
-                        .padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(state.tools, key = { it.id }) { tool ->
-                        ToolRow(tool = tool, onRemove = { onRemoveTool(tool.id) })
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(cameraHeight),
+            ) {
+                if (LocalInspectionMode.current) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("QR Scanner Placeholder")
+                    }
+                } else {
+                    QrScannerView(
+                        onQrScanned = onScanned,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                if (state.isProcessing) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
                     }
                 }
             }
 
-            Button(
-                onClick = onFinish,
-                enabled = state.tools.isNotEmpty() && !state.isProcessing,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(pluralStringResource(R.plurals.checkout_finish, state.tools.size, state.tools.size))
-            }
-            OutlinedButton(
-                onClick = onCancel,
-                enabled = !state.isProcessing,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-            ) {
-                Text(stringResource(R.string.action_cancel))
+            Column(Modifier.padding(16.dp)) {
+                Text(
+                    stringResource(R.string.checkout_tools_to_checkout, state.tools.size),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                if (state.tools.isEmpty()) {
+                    Text(
+                        stringResource(R.string.checkout_no_tools_scanned),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = 8.dp),
+                    )
+                } else {
+                    // A plain Column (not LazyColumn) — the cart is small and a lazy list would
+                    // fight the outer vertical scroll for the same gesture.
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        state.tools.forEach { tool ->
+                            ToolRow(tool = tool, onRemove = { onRemoveTool(tool.id) })
+                        }
+                    }
+                }
+
+                Button(
+                    onClick = onFinish,
+                    enabled = state.tools.isNotEmpty() && !state.isProcessing,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(pluralStringResource(R.plurals.checkout_finish, state.tools.size, state.tools.size))
+                }
+                OutlinedButton(
+                    onClick = onCancel,
+                    enabled = !state.isProcessing,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                ) {
+                    Text(stringResource(R.string.action_cancel))
+                }
             }
         }
     }
