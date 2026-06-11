@@ -18,9 +18,7 @@ val gstockBaseUrl: String = localProperties.getProperty("gstock.base.url") ?: "h
 android {
     namespace = "be.marche.gstock"
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
+        version = release(37)
     }
 
     defaultConfig {
