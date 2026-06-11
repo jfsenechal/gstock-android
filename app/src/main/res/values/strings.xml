@@ -49,6 +49,10 @@
         <item quantity="one">Finished — check out %1$d tool</item>
         <item quantity="other">Finished — check out %1$d tools</item>
     </plurals>
+    <plurals name="checkout_result_message">
+        <item quantity="one">%1$d tool checked out to %2$s</item>
+        <item quantity="other">%1$d tools checked out to %2$s</item>
+    </plurals>
     <string name="checkout_remove_tool">Remove %1$s</string>
     <string name="checkout_reserved_title">Tool already reserved</string>
     <string name="checkout_reserved_message">\"%1$s\" is already checked out and cannot be added to this checkout. It was not added.</string>

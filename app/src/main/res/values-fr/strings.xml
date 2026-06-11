@@ -49,6 +49,10 @@
         <item quantity="one">Terminé — sortir %1$d outil</item>
         <item quantity="other">Terminé — sortir %1$d outils</item>
     </plurals>
+    <plurals name="checkout_result_message">
+        <item quantity="one">%1$d outil sorti pour %2$s</item>
+        <item quantity="other">%1$d outils sortis pour %2$s</item>
+    </plurals>
     <string name="checkout_remove_tool">Retirer %1$s</string>
     <string name="checkout_reserved_title">Outil déjà réservé</string>
     <string name="checkout_reserved_message">« %1$s » est déjà sorti et ne peut pas être ajouté à cet emprunt. Il n\'a pas été ajouté.</string>

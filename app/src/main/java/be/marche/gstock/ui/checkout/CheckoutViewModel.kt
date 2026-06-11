@@ -126,8 +126,12 @@ class CheckoutViewModel @Inject constructor(
                     it.copy(
                         isProcessing = false,
                         step = CheckoutStep.DONE,
-                        resultMessage = "$count tool${if (count > 1) "s" else ""} checked out to " +
+                        resultMessage = context.resources.getQuantityString(
+                            R.plurals.checkout_result_message,
+                            count,
+                            count,
                             "${worker.firstName} ${worker.lastName}",
+                        ),
                     )
                 }
                 is ApiResult.Error ->
