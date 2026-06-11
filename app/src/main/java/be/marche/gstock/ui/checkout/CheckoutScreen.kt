@@ -40,7 +40,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import be.marche.gstock.R
 import be.marche.gstock.data.remote.dto.ToolDto
 import be.marche.gstock.data.remote.dto.WorkerDto
+import androidx.compose.ui.platform.LocalInspectionMode
 import be.marche.gstock.ui.scan.QrScannerView
+import androidx.compose.ui.tooling.preview.Preview
+import be.marche.gstock.ui.theme.GstockTheme
 
 @Composable
 fun CheckoutScreen(
@@ -49,6 +52,29 @@ fun CheckoutScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+    CheckoutScreenContent(
+        state = state,
+        onWorkerScanned = viewModel::onWorkerScanned,
+        onToolScanned = viewModel::onToolScanned,
+        onRemoveTool = viewModel::removeTool,
+        onFinish = viewModel::finish,
+        onReset = viewModel::reset,
+        onDismissReservedAlert = viewModel::dismissReservedAlert,
+        onFinished = onFinished,
+    )
+}
+
+@Composable
+private fun CheckoutScreenContent(
+    state: CheckoutUiState,
+    onWorkerScanned: (String) -> Unit,
+    onToolScanned: (String) -> Unit,
+    onRemoveTool: (Long) -> Unit,
+    onFinish: () -> Unit,
+    onReset: () -> Unit,
+    onDismissReservedAlert: () -> Unit,
+    onFinished: () -> Unit,
+) {
     Box(Modifier.fillMaxSize()) {
         when (state.step) {
             CheckoutStep.SCAN_WORKER -> ScanStep(
@@ -56,29 +82,29 @@ fun CheckoutScreen(
                 instruction = stringResource(R.string.checkout_step1_instruction),
                 isProcessing = state.isProcessing,
                 error = state.error,
-                onScanned = viewModel::onWorkerScanned,
+                onScanned = onWorkerScanned,
             )
 
             CheckoutStep.SCAN_TOOLS -> ScanToolsStep(
                 state = state,
-                onScanned = viewModel::onToolScanned,
-                onRemoveTool = viewModel::removeTool,
-                onFinish = viewModel::finish,
-                onCancel = viewModel::reset,
+                onScanned = onToolScanned,
+                onRemoveTool = onRemoveTool,
+                onFinish = onFinish,
+                onCancel = onReset,
             )
 
             CheckoutStep.DONE -> DoneStep(
                 message = state.resultMessage ?: stringResource(R.string.checkout_done_default),
-                onNewCheckout = viewModel::reset,
+                onNewCheckout = onReset,
                 onViewCheckouts = {
-                    viewModel.reset()
+                    onReset()
                     onFinished()
                 },
             )
         }
 
         state.reservedTool?.let { tool ->
-            ReservedToolDialog(tool = tool, onDismiss = viewModel::dismissReservedAlert)
+            ReservedToolDialog(tool = tool, onDismiss = onDismissReservedAlert)
         }
     }
 }
@@ -105,10 +131,21 @@ private fun ScanStep(
             }
         }
         Box(Modifier.fillMaxSize()) {
-            QrScannerView(
-                onQrScanned = onScanned,
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (LocalInspectionMode.current) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("QR Scanner Placeholder")
+                }
+            } else {
+                QrScannerView(
+                    onQrScanned = onScanned,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
             if (isProcessing) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -150,10 +187,21 @@ private fun ScanToolsStep(
                 .fillMaxWidth()
                 .weight(1f),
         ) {
-            QrScannerView(
-                onQrScanned = onScanned,
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (LocalInspectionMode.current) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("QR Scanner Placeholder")
+                }
+            } else {
+                QrScannerView(
+                    onQrScanned = onScanned,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
             if (state.isProcessing) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -318,5 +366,70 @@ private fun DoneStep(
         OutlinedButton(onClick = onViewCheckouts, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.checkout_view))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CheckoutScreenScanWorkerPreview() {
+    GstockTheme {
+        CheckoutScreenContent(
+            state = CheckoutUiState(step = CheckoutStep.SCAN_WORKER),
+            onWorkerScanned = {},
+            onToolScanned = {},
+            onRemoveTool = {},
+            onFinish = {},
+            onReset = {},
+            onDismissReservedAlert = {},
+            onFinished = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CheckoutScreenScanToolsPreview() {
+    GstockTheme {
+        CheckoutScreenContent(
+            state = CheckoutUiState(
+                step = CheckoutStep.SCAN_TOOLS,
+                worker = WorkerDto(
+                    id = 1L,
+                    firstName = "John",
+                    lastName = "Doe",
+                ),
+                tools = listOf(
+                    ToolDto(id = 1L, name = "Drill", manufacturer = "DeWalt", model = "DCD771"),
+                    ToolDto(id = 2L, name = "Hammer", manufacturer = "Stanley", model = "FatMax"),
+                ),
+            ),
+            onWorkerScanned = {},
+            onToolScanned = {},
+            onRemoveTool = {},
+            onFinish = {},
+            onReset = {},
+            onDismissReservedAlert = {},
+            onFinished = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CheckoutScreenDonePreview() {
+    GstockTheme {
+        CheckoutScreenContent(
+            state = CheckoutUiState(
+                step = CheckoutStep.DONE,
+                resultMessage = "2 tools checked out to John Doe",
+            ),
+            onWorkerScanned = {},
+            onToolScanned = {},
+            onRemoveTool = {},
+            onFinish = {},
+            onReset = {},
+            onDismissReservedAlert = {},
+            onFinished = {},
+        )
     }
 }
