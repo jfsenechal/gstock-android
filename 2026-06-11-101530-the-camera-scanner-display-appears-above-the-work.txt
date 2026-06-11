@@ -1,0 +1,583 @@
+ ▐▛███▜▌   Claude Code v2.1.173
+▝▜█████▛▘  Opus 4.8 · Claude Pro
+  ▘▘ ▝▝    ~/AndroidStudioProjects/Gstock
+
+ ▎ Meet Fable 5, our newest model for complex, long-running work. Try anytime with /model.
+ ▎ Included in your plan limits until Jun 22, then switch to usage credits to continue.
+
+❯ The camera scanner display appears above the worker's name, and the list of   
+  scanned tools appears above the camera. In the preview, the camera is         
+  correctly positioned between these two blocks. Fix the window; make it more   
+  responsive. Look in the skills section (/home/jfsenechal/.claude/skills/) for 
+  help. Here's a screenshot of the preview, which is perfect: see               
+  data/PreviewComposable.png. And here's a screenshot from the smartphone where 
+  the elements overlap: see data/screenshot.png.                                
+
+● I'll look at the screenshots and the CheckoutScreen code to understand the
+  layout issue.
+
+  Read 3 files (ctrl+o to expand)
+
+● The preview is clean but on the device the camera overlaps the worker header.
+  Let me look at the QrScannerView implementation.
+
+  Read 1 file (ctrl+o to expand)
+
+● The QrScannerView already uses COMPATIBLE/TextureView mode. The issue is
+  structural in the ScanToolsStep layout. The task asks me to consult the skills
+  section. The symptom — "components overlap / make it more responsive" —
+  points to the adaptive and edge-to-edge skills. Let me check both.
+
+  Read 2 files, listed 1 directory (ctrl+o to expand)
+
+● Let me look at how the scaffold and MainActivity handle insets, since the
+  screen content needs proper inset handling and responsive sizing.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● The insets are correctly handled by the Scaffold (innerPadding → NavHost), so
+  this isn't a system-bar inset problem. The real issue is in ScanToolsStep: it
+  crams a worker card, two text blocks, a greedy weight(1f) camera, a scrollable
+  list, and two buttons into one non-scrollable Column. On a real phone
+  (shorter than the preview device, minus the top/bottom bars) the fixed content
+  overflows the available height, so the camera's weighted slot collapses and
+  blocks overlap.
+
+  Following the skills' guidance (responsive sizing + avoiding a lazy list
+  nested in a flexible column), I'll restructure it to:
+  - Measure the real viewport with BoxWithConstraints and size the camera to a
+  responsive fraction of it (clamped), instead of a greedy weight.
+  - Make the whole step scrollable so content can never overlap on short
+  screens.
+  - Replace the nested LazyColumn (which fights the outer scroll) with a plain
+  Column over the small cart.
+
+● Update(app/src/main/java/be/marche/gstock/ui/checkout/CheckoutScreen.kt)
+  ⎿  Added 4 lines, removed 3 lines
+       3  import androidx.compose.foundation.background
+       4  import androidx.compose.foundation.layout.Arrangement
+       5  import androidx.compose.foundation.layout.Box
+       6 +import androidx.compose.foundation.layout.BoxWithConstraints   
+       7  import androidx.compose.foundation.layout.Column
+       8  import androidx.compose.foundation.layout.Row
+       9  import androidx.compose.foundation.layout.fillMaxSize
+      10  import androidx.compose.foundation.layout.fillMaxWidth
+      10 -import androidx.compose.foundation.layout.heightIn             
+      11 +import androidx.compose.foundation.layout.height               
+      12  import androidx.compose.foundation.layout.padding
+      13  import androidx.compose.foundation.layout.size
+      13 -import androidx.compose.foundation.lazy.LazyColumn             
+      14 -import androidx.compose.foundation.lazy.items                  
+      14 +import androidx.compose.foundation.rememberScrollState         
+      15  import androidx.compose.foundation.shape.CircleShape
+      16 +import androidx.compose.foundation.verticalScroll              
+      17  import androidx.compose.material.icons.Icons
+      18  import androidx.compose.material.icons.filled.Close
+      19  import androidx.compose.material3.AlertDialog
+  ⎿  Found 11 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● Now rewrite the ScanToolsStep body:
+
+● Update(app/src/main/java/be/marche/gstock/ui/checkout/CheckoutScreen.kt)
+  ⎿  Added 85 lines, removed 73 lines
+      164      onFinish: () -> Unit,
+      165      onCancel: () -> Unit,
+      166  ) {
+      167 -    Column(Modifier.fillMaxSize()) {                          
+      168 -        Column(                                               
+      169 -            Modifier.padding(16.dp),                          
+      170 -            verticalArrangement = Arrangement.spacedBy(12.dp),
+      171 -        ) {                                                   
+      172 -            state.worker?.let { WorkerHeaderCard(it) }        
+      173 -            Text(stringResource(R.string.checkout_step2_title)
+          -, style = MaterialTheme.typography.titleLarge)                
+      174 -            Text(stringResource(R.string.checkout_step2_instru
+          -ction), style = MaterialTheme.typography.bodyMedium)          
+      175 -            if (state.error != null) {                        
+      176 -                Text(                                         
+      177 -                    state.error,                              
+      178 -                    color = MaterialTheme.colorScheme.error,  
+      179 -                    style = MaterialTheme.typography.bodyMediu
+          -m,                                                            
+      180 -                    modifier = Modifier.padding(top = 8.dp),  
+      181 -                )                                             
+      182 -            }                                                 
+      183 -        }                                                     
+      167 +    // Measure the real viewport (BoxWithConstraints isn't aff
+          +ected by the inner scroll) so the                             
+      168 +    // camera can take a responsive share of it instead of a g
+          +reedy weight that collapses — and                             
+      169 +    // overlaps neighbouring content — once the fixed sections
+          + no longer fit on shorter screens.                            
+      170 +    BoxWithConstraints(Modifier.fillMaxSize()) {              
+      171 +        val cameraHeight = (maxHeight * 0.4f).coerceIn(200.dp,
+          + 360.dp)                                                      
+      172  
+      185 -        // Camera occupies the upper half so the cart stays vi
+          -sible.                                                        
+      186 -        Box(                                                  
+      173 +        // The whole step scrolls so nothing can overlap when 
+          +the content is taller than the screen.                        
+      174 +        Column(                                               
+      175              Modifier
+      188 -                .fillMaxWidth()                               
+      189 -                .weight(1f),                                  
+      176 +                .fillMaxSize()                                
+      177 +                .verticalScroll(rememberScrollState()),       
+      178          ) {
+      191 -            if (LocalInspectionMode.current) {                
+      192 -                Box(                                          
+      193 -                    Modifier                                  
+      194 -                        .fillMaxSize()                        
+      195 -                        .background(MaterialTheme.colorScheme.
+          -surfaceVariant),                                              
+      196 -                    contentAlignment = Alignment.Center,      
+      197 -                ) {                                           
+      198 -                    Text("QR Scanner Placeholder")            
+      179 +            Column(                                           
+      180 +                Modifier.padding(16.dp),                      
+      181 +                verticalArrangement = Arrangement.spacedBy(12.
+          +dp),                                                          
+      182 +            ) {                                               
+      183 +                state.worker?.let { WorkerHeaderCard(it) }    
+      184 +                Text(stringResource(R.string.checkout_step2_ti
+          +tle), style = MaterialTheme.typography.titleLarge)            
+      185 +                Text(stringResource(R.string.checkout_step2_in
+          +struction), style = MaterialTheme.typography.bodyMedium)      
+      186 +                if (state.error != null) {                    
+      187 +                    Text(                                     
+      188 +                        state.error,                          
+      189 +                        color = MaterialTheme.colorScheme.erro
+          +r,                                                            
+      190 +                        style = MaterialTheme.typography.bodyM
+          +edium,                                                        
+      191 +                        modifier = Modifier.padding(top = 8.dp
+          +),                                                            
+      192 +                    )                                         
+      193                  }
+      200 -            } else {                                          
+      201 -                QrScannerView(                                
+      202 -                    onQrScanned = onScanned,                  
+      203 -                    modifier = Modifier.fillMaxSize(),        
+      204 -                )                                             
+      194              }
+      206 -            if (state.isProcessing) {                         
+      207 -                Box(Modifier.fillMaxSize(), contentAlignment =
+          - Alignment.Center) {                                          
+      208 -                    CircularProgressIndicator()               
+      195 +                                                              
+      196 +            Box(                                              
+      197 +                Modifier                                      
+      198 +                    .fillMaxWidth()                           
+      199 +                    .height(cameraHeight),                    
+      200 +            ) {                                               
+      201 +                if (LocalInspectionMode.current) {            
+      202 +                    Box(                                      
+      203 +                        Modifier                              
+      204 +                            .fillMaxSize()                    
+      205 +                            .background(MaterialTheme.colorSch
+          +eme.surfaceVariant),                                          
+      206 +                        contentAlignment = Alignment.Center,  
+      207 +                    ) {                                       
+      208 +                        Text("QR Scanner Placeholder")        
+      209 +                    }                                         
+      210 +                } else {                                      
+      211 +                    QrScannerView(                            
+      212 +                        onQrScanned = onScanned,              
+      213 +                        modifier = Modifier.fillMaxSize(),    
+      214 +                    )                                         
+      215                  }
+      216 +                if (state.isProcessing) {                     
+      217 +                    Box(Modifier.fillMaxSize(), contentAlignme
+          +nt = Alignment.Center) {                                      
+      218 +                        CircularProgressIndicator()           
+      219 +                    }                                         
+      220 +                }                                             
+      221              }
+      211 -        }                                                     
+      222  
+      213 -        Column(Modifier.padding(16.dp)) {                     
+      214 -            Text(                                             
+      215 -                stringResource(R.string.checkout_tools_to_chec
+          -kout, state.tools.size),                                      
+      216 -                style = MaterialTheme.typography.titleMedium, 
+      217 -            )                                                 
+      218 -            if (state.tools.isEmpty()) {                      
+      223 +            Column(Modifier.padding(16.dp)) {                 
+      224                  Text(
+      220 -                    stringResource(R.string.checkout_no_tools_
+          -scanned),                                                     
+      221 -                    style = MaterialTheme.typography.bodyMediu
+          -m,                                                            
+      222 -                    modifier = Modifier.padding(vertical = 8.d
+          -p),                                                           
+      225 +                    stringResource(R.string.checkout_tools_to_
+          +checkout, state.tools.size),                                  
+      226 +                    style = MaterialTheme.typography.titleMedi
+          +um,                                                           
+      227                  )
+      224 -            } else {                                          
+      225 -                LazyColumn(                                   
+      226 -                    Modifier                                  
+      228 +                if (state.tools.isEmpty()) {                  
+      229 +                    Text(                                     
+      230 +                        stringResource(R.string.checkout_no_to
+          +ols_scanned),                                                 
+      231 +                        style = MaterialTheme.typography.bodyM
+          +edium,                                                        
+      232 +                        modifier = Modifier.padding(vertical =
+          + 8.dp),                                                       
+      233 +                    )                                         
+      234 +                } else {                                      
+      235 +                    // A plain Column (not LazyColumn) — the c
+          +art is small and a lazy list would                            
+      236 +                    // fight the outer vertical scroll for the
+          + same gesture.                                                
+      237 +                    Column(                                   
+      238 +                        Modifier                              
+      239 +                            .fillMaxWidth()                   
+      240 +                            .padding(vertical = 8.dp),        
+      241 +                        verticalArrangement = Arrangement.spac
+          +edBy(8.dp),                                                   
+      242 +                    ) {                                       
+      243 +                        state.tools.forEach { tool ->         
+      244 +                            ToolRow(tool = tool, onRemove = { 
+          +onRemoveTool(tool.id) })                                      
+      245 +                        }                                     
+      246 +                    }                                         
+      247 +                }                                             
+      248 +                                                              
+      249 +                Button(                                       
+      250 +                    onClick = onFinish,                       
+      251 +                    enabled = state.tools.isNotEmpty() && !sta
+          +te.isProcessing,                                              
+      252 +                    modifier = Modifier.fillMaxWidth(),       
+      253 +                ) {                                           
+      254 +                    Text(pluralStringResource(R.plurals.checko
+          +ut_finish, state.tools.size, state.tools.size))               
+      255 +                }                                             
+      256 +                OutlinedButton(                               
+      257 +                    onClick = onCancel,                       
+      258 +                    enabled = !state.isProcessing,            
+      259 +                    modifier = Modifier                       
+      260                          .fillMaxWidth()
+      228 -                        .heightIn(max = 180.dp)               
+      229 -                        .padding(vertical = 8.dp),            
+      230 -                    verticalArrangement = Arrangement.spacedBy
+          -(8.dp),                                                       
+      261 +                        .padding(top = 8.dp),                 
+      262                  ) {
+      232 -                    items(state.tools, key = { it.id }) { tool
+          - ->                                                           
+      233 -                        ToolRow(tool = tool, onRemove = { onRe
+          -moveTool(tool.id) })                                          
+      234 -                    }                                         
+      263 +                    Text(stringResource(R.string.action_cancel
+          +))                                                            
+      264                  }
+      265              }
+      237 -                                                              
+      238 -            Button(                                           
+      239 -                onClick = onFinish,                           
+      240 -                enabled = state.tools.isNotEmpty() && !state.i
+          -sProcessing,                                                  
+      241 -                modifier = Modifier.fillMaxWidth(),           
+      242 -            ) {                                               
+      243 -                Text(pluralStringResource(R.plurals.checkout_f
+          -inish, state.tools.size, state.tools.size))                   
+      244 -            }                                                 
+      245 -            OutlinedButton(                                   
+      246 -                onClick = onCancel,                           
+      247 -                enabled = !state.isProcessing,                
+      248 -                modifier = Modifier                           
+      249 -                    .fillMaxWidth()                           
+      250 -                    .padding(top = 8.dp),                     
+      251 -            ) {                                               
+      252 -                Text(stringResource(R.string.action_cancel))  
+      253 -            }                                                 
+      266          }
+      267      }
+      268  }
+
+● Let me check diagnostics to confirm everything resolves:
+
+  Called ide (ctrl+o to expand)
+
+● Clean — no diagnostics. Let me verify it compiles:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Compiles cleanly. Done.
+
+  What was wrong
+
+  The insets were fine (the Scaffold already pads the NavHost), and
+  QrScannerView already uses TextureView mode. The real problem was the layout 
+  of ScanToolsStep: it packed the worker card, two text blocks, a greedy
+  weight(1f) camera, a scrollable list, and two buttons into one non-scrollable
+  Column.
+
+  The preview device is tall enough that everything fits. On a real phone —
+  which is shorter and loses height to the top app bar and bottom nav bar — the
+  fixed sections no longer fit. The camera's weighted slot collapses toward
+  zero, so the blocks pile up and overlap, exactly as in your screenshot.
+
+  The fix (CheckoutScreen.kt, ScanToolsStep)
+
+  Guided by the edge-to-edge / adaptive skills:
+
+  1. Responsive camera height — wrapped the step in BoxWithConstraints and sized
+  the camera to 40% of the actual viewport, clamped to 200dp…360dp, instead of
+  a greedy weight(1f) that fights the other content for space. On a tall screen
+  it looks like your preview; on a short one it stays a sensible size.
+  2. Scrollable step — the content Column now has verticalScroll(...), so if
+  everything can't fit, it scrolls instead of overlapping. This is what
+  guarantees no overlap on any screen size.
+  3. Plain Column for the cart instead of LazyColumn — the cart is small, and a
+  nested lazy list would fight the outer scroll for the same vertical gesture
+  (and heightIn(max=180) is no longer needed since the page scrolls).
+
+  The previews are unchanged in structure and still render correctly. Worth
+  re-running on the device to confirm the overlap is gone.
+
+✻ Cogitated for 4m 18s
+
+❯ install it on the device and check                                            
+
+● I'll build, install, then launch and capture a screenshot from the device.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● A Pixel 8a is connected. Building and installing the debug APK:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Installed. Now launch the app and capture a screenshot:
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+● Screen is black — the device is likely locked. Let me wake it and check:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Awake but locked. Let me try to dismiss the lockscreen with a swipe:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Lockscreen dismissed, but another app is foreground. Let me launch Gstock
+  again:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● The app is logged in and on the Checkouts tab. Now I need to reach the Check 
+  out → Scan tools step, which is the screen I changed. Let me tap "Check out"
+  in the bottom nav:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● My tap missed the nav item and hit the home screen. Let me relaunch and tap
+  the correct coordinates (3rd of 4 nav items ≈ x=675):
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● I've reached Step 1 — Scan worker badge (the unchanged ScanStep). To see my
+  modified Step 2 — Scan tools layout, a worker QR must be scanned first. Let me
+  check the QR format so I can generate a valid worker code to present to the
+  camera:
+
+  Read 1 file (ctrl+o to expand)
+
+● Worker QR format is GSTOCK:W:<id>. To reach Step 2 I need the camera to read a
+  worker QR — which needs a physical code in front of the lens. Let me generate
+  worker QR images you can point the camera at. First, checking for a QR
+  generator:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● I have a QR generator. I don't know valid worker IDs, so I'll generate a sheet
+  of worker QRs (GSTOCK:W:1–8) you can point the camera at — the server
+  resolves whichever ID is valid and advances to the Step 2 screen I changed.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The camera needs a physical QR in front of it to advance to Step 2 — that's
+  the one step I can't do headlessly. I've generated a sheet of worker QR codes.
+  Let me open it on your monitor so you can point the phone's camera at it:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● I've opened a sheet of worker QR codes (/tmp/worker_qrs.png) on your screen,
+  and the app is sitting on Step 1 — Scan worker badge.
+
+  Please point the phone's back camera at any one of the QR codes (or at a real
+  worker badge if you have one handy). As soon as a valid worker is recognized,
+  the app advances to the Step 2 — Scan tools screen — the one I restructured.
+
+  Once you've done that (you don't need to scan any tools), tell me and I'll
+  capture a screenshot from the device and verify the layout — confirming the
+  camera now sits cleanly between the worker card and the tools list with no
+  overlap. I'll also scroll to confirm nothing is clipped.
+
+✻ Worked for 3m 18s
+
+❯ done, scanned worker W:1                                                      
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Step 2 renders on-device. The worker card ("Checking out to Christophe
+  Arnould") and camera no longer overlap — that's a clear improvement over your
+  original screenshot. But the "Step 2 — Scan tools" title and instruction that
+  should sit between the worker card and the camera aren't visible. Let me dump
+  the view hierarchy to check whether they're laid out but covered, or pushed
+  off:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The view hierarchy is decisive — everything is laid out cleanly, sequentially,
+  with no overlap:
+
+  ┌────────────────────────────────────┬──────────────────────┐
+  │              Element               │ Vertical bounds (px) │
+  ├────────────────────────────────────┼──────────────────────┤
+  │ Worker card ("Christophe Arnould") │ …–494                │
+  ├────────────────────────────────────┼──────────────────────┤
+  │ Step 2 — Scan tools (title)        │ 573–647              │
+  ├────────────────────────────────────┼──────────────────────┤
+  │ Instruction                        │ 679–732              │
+  ├────────────────────────────────────┼──────────────────────┤
+  │ Error ("That is not a tool…")      │ 785–838              │
+  ├────────────────────────────────────┼──────────────────────┤
+  │ (camera occupies ~838–1632)        │                      │
+  ├────────────────────────────────────┼──────────────────────┤
+  │ Tools to check out (0)             │ 1632–1695            │
+  ├────────────────────────────────────┼──────────────────────┤
+  │ Finished / Cancel buttons          │ 1827–2027            │
+  ├────────────────────────────────────┼──────────────────────┤
+  │ Bottom nav                         │ 2190+                │
+  └────────────────────────────────────┴──────────────────────┘
+
+  The title/instruction sit correctly between the worker card and the camera —
+  my first screenshot was just a transient frame (and an error appeared because
+  the camera re-read the worker QR as a non-tool). Let me grab a fresh
+  screenshot to confirm visually:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Let me crop the region between the worker card and camera to check whether the
+  title text is actually rendering there:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+● In step 1, the camera correctly stayed below its title — but here in step 2
+  the camera visually covers the title/instruction even though uiautomator lists
+  them as laid out. The dump and screenshot were taken at different moments, so
+  let me capture both simultaneously and find the camera view's actual bounds:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now at the same instant, the bounds tell a clean story:
+
+  - Title: 573–647, Instruction: 679–732
+  - TextureView (camera): 880–1590 — correctly below the instruction
+  - Tools list: 1632+
+
+  So the layout is correct. Let me verify the matching screenshot visually shows
+  the title in the gap (494–880):
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● The crop still shows camera imagery where the title should be (per the dump, y
+  880 is the camera top, yet the 500–900 band is full of camera). The
+  screenshot and dump may be drifting. Let me take one fresh full screenshot and
+  judge purely by pixels:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Now I see the real bug. The pixels disagree with the view tree: uiautomator
+  places the camera TextureView at y=880–1590, but the rendered camera image 
+  bleeds upward to ~520, covering the title/instruction (and your original
+  screenshot showed the same bleed over the worker card).
+
+  This is PreviewView's FILL_CENTER scaling: it scales the tall portrait camera
+  feed to fill the box width, making the internal TextureView much taller than
+  its slot, then centers it — and the overflow paints over neighboring
+  composables because the preview isn't clipped. In step 1 the camera slot was
+  tall enough to hide it; my fixed-height slot in step 2 made the vertical
+  overflow large. The fix is to clip the preview to its bounds at the source:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(app/src/main/java/be/marche/gstock/ui/scan/QrScannerView.kt)
+  ⎿  Added 1 line
+      22  import androidx.compose.runtime.rememberUpdatedState
+      23  import androidx.compose.runtime.setValue
+      24  import androidx.compose.ui.Modifier
+      25 +import androidx.compose.ui.draw.clipToBounds                   
+      26  import androidx.compose.ui.platform.LocalContext
+      27  import androidx.compose.ui.viewinterop.AndroidView
+      28  import androidx.core.content.ContextCompat
+
+● Update(app/src/main/java/be/marche/gstock/ui/scan/QrScannerView.kt)
+  ⎿  Added 4 lines, removed 1 line
+      85          onDispose { analysisExecutor.shutdown() }
+      86      }
+      87  
+      88 -    Box(modifier.fillMaxSize()) {                              
+      88 +    // clipToBounds() is essential: PreviewView scales the prev
+         +iew (FILL_CENTER) so the inner                                 
+      89 +    // TextureView is larger than this box and centered, which 
+         +otherwise paints the camera image                              
+      90 +    // over the composables above and below it (e.g. the worker
+         + banner and the cart).                                         
+      91 +    Box(modifier.fillMaxSize().clipToBounds()) {               
+      92          AndroidView(
+      93              modifier = Modifier.fillMaxSize(),
+      94              factory = { ctx ->
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Reinstalled. Let me relaunch and navigate back to the Check out screen:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Already on Step 2 (worker state persisted). Let me capture and verify the
+  overlap is fixed — both the full view and the title band:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● The overlap is fixed. The fresh on-device screenshot now shows everything laid
+  out cleanly in order, no bleed:
+
+  - Worker card — "Checking out to jf² senechal" ✓
+  - Step 2 — Scan tools (title) ✓ (was hidden under the camera before)
+  - Instruction + error line ✓
+  - Camera preview — now clipped to its own box, sitting between the header and
+  the cart ✓
+  - Tools to check out (0) / Finished / Cancel ✓
+  - Bottom nav ✓
+
+  This matches your "perfect" preview.
+
+  Summary of what was wrong and the two fixes
+
+  The problem had two root causes, not one:
+
+  1. Layout responsiveness (CheckoutScreen.kt, ScanToolsStep) — a greedy
+  weight(1f) camera in a non-scrollable Column collapsed once the fixed content
+  didn't fit a real phone. Restructured to: BoxWithConstraints sizing the camera
+  to a responsive fraction of the real viewport (40%, clamped 200–360dp), the
+  whole step verticalScrollable, and a plain Column for the small cart instead
+  of a LazyColumn nested in a scroll.
+  2. The actual overlap (QrScannerView.kt) — PreviewView's FILL_CENTER scaling
+  makes the inner TextureView larger than its slot and centers it, so the camera
+  image painted over the composables above and below it (your original
+  screenshot, and reproduced here on-device). uiautomator confirmed the views
+  were laid out correctly while the pixels showed bleed — a classic
+  unclipped-preview symptom. Fixed with Modifier.clipToBounds() on the preview
+  box, so the camera is cropped to its viewfinder. This also hardens step 1.
+
+  Both changes compile (./gradlew installDebug succeeded) and are verified live
+  on the Pixel 8a.
+
+  One note: I left the worker/QR test sheet (/tmp/worker_qrs.png) open on your
+  screen — you can close it.
+
+✻ Worked for 5m 51s

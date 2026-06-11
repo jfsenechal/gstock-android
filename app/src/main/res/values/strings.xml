@@ -83,6 +83,7 @@
     <string name="tools_empty">No tools found</string>
     <string name="tool_available">Available</string>
     <string name="tool_unavailable">Unavailable</string>
+    <string name="tool_status_checked_out">Checked out</string>
 
     <!-- Workers -->
     <string name="search_workers">Search workers</string>

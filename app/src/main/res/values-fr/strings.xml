@@ -2,7 +2,7 @@
     <string name="app_name">Gstock</string>
 
     <!-- Navigation -->
-    <string name="nav_checkout">Emprunt</string>
+    <string name="nav_checkout">Scan</string>
     <string name="nav_catalog">Catalogue</string>
     <string name="nav_checkouts">Emprunts</string>
     <string name="nav_account">Compte</string>
@@ -83,6 +83,7 @@
     <string name="tools_empty">Aucun outil trouvé</string>
     <string name="tool_available">Disponible</string>
     <string name="tool_unavailable">Indisponible</string>
+    <string name="tool_status_checked_out">Emprunté</string>
 
     <!-- Workers -->
     <string name="search_workers">Rechercher des ouvriers</string>

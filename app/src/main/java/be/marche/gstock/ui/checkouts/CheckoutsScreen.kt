@@ -26,11 +26,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import be.marche.gstock.R
+import be.marche.gstock.core.toReadableDateTime
 import be.marche.gstock.data.local.entity.CheckoutEntity
 import be.marche.gstock.ui.common.LoadingBox
 import be.marche.gstock.ui.common.MessageBox
@@ -113,11 +115,18 @@ private fun CheckoutRow(
                 ),
                 style = MaterialTheme.typography.bodyMedium,
             )
+            val locale = LocalConfiguration.current.locales[0]
             checkout.checkedOutAt?.let {
-                Text(stringResource(R.string.checkout_out, it), style = MaterialTheme.typography.bodySmall)
+                Text(
+                    stringResource(R.string.checkout_out, it.toReadableDateTime(locale)),
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
             checkout.dueAt?.let {
-                Text(stringResource(R.string.checkout_due, it), style = MaterialTheme.typography.bodySmall)
+                Text(
+                    stringResource(R.string.checkout_due, it.toReadableDateTime(locale)),
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
             Row(
                 Modifier

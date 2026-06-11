@@ -85,7 +85,7 @@ private fun ToolRow(tool: ToolEntity) {
                     label = {
                         Text(
                             if (tool.isAvailable) stringResource(R.string.tool_available)
-                            else (tool.status ?: stringResource(R.string.tool_unavailable)),
+                            else toolStatusLabel(tool.status),
                         )
                     },
                 )
@@ -99,4 +99,11 @@ private fun ToolRow(tool: ToolEntity) {
             }
         }
     }
+}
+
+/** Maps a raw backend tool status to a localized label, falling back to "Unavailable". */
+@Composable
+private fun toolStatusLabel(status: String?): String = when (status) {
+    "checked_out" -> stringResource(R.string.tool_status_checked_out)
+    else -> stringResource(R.string.tool_unavailable)
 }
