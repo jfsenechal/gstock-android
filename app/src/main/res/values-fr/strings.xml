@@ -70,6 +70,10 @@
     <string name="filter_active">Actifs</string>
     <string name="filter_returned">Retournés</string>
     <string name="filter_overdue">En retard</string>
+    <string name="filter_worker_label">Ouvrier</string>
+    <string name="filter_worker_all">Tous les ouvriers</string>
+    <string name="filter_tool_label">Outil</string>
+    <string name="filter_tool_all">Tous les outils</string>
     <string name="checkouts_empty">Aucun emprunt</string>
     <string name="checkout_tool_fallback">Outil n°%1$s</string>
     <string name="checkout_unknown">?</string>
