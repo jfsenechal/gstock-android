@@ -11,8 +11,12 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -21,14 +25,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import be.marche.gstock.ui.common.MessageBox
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
 
@@ -127,16 +135,39 @@ private fun CameraPreview(
                 previewView
             },
         )
+        // Reticle marking the frame center: only the code aimed at here is reported.
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth(0.6f)
+                .aspectRatio(1f)
+                .border(2.dp, Color.White.copy(alpha = 0.8f), RoundedCornerShape(12.dp)),
+        )
     }
 }
 
 /** Minimum gap before the *same* value is reported again, to avoid spamming while it stays in view. */
 private const val SCAN_COOLDOWN_MS = 2500L
 
+/**
+ * A code must stay centered for this long before it is reported. This debounces panning across a
+ * sheet of codes so a lookup only fires for the one the user settles the reticle on.
+ */
+private const val CENTER_DWELL_MS = 400L
+
+/**
+ * How close a code's center must be to the frame center to count as "aimed at", as a fraction of the
+ * smaller image dimension. Roughly matches the on-screen reticle.
+ */
+private const val CENTER_RADIUS_FRACTION = 0.25f
+
 private class QrAnalyzer(private val onResult: (String) -> Unit) : ImageAnalysis.Analyzer {
     private val scanner = BarcodeScanning.getClient()
     private var lastValue: String? = null
     private var lastReportedAt = 0L
+    // The value currently under the reticle and when it first got there, for dwell-time debouncing.
+    private var candidateValue: String? = null
+    private var candidateSince = 0L
 
     @ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
@@ -145,18 +176,56 @@ private class QrAnalyzer(private val onResult: (String) -> Unit) : ImageAnalysis
             imageProxy.close()
             return
         }
-        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+        val rotation = imageProxy.imageInfo.rotationDegrees
+        // ML Kit reports bounding boxes in the upright (post-rotation) image space, so swap the
+        // dimensions for 90°/270° to compute the center in that same space.
+        val rotated = rotation == 90 || rotation == 270
+        val width = if (rotated) mediaImage.height else mediaImage.width
+        val height = if (rotated) mediaImage.width else mediaImage.height
+        val image = InputImage.fromMediaImage(mediaImage, rotation)
         scanner.process(image)
-            .addOnSuccessListener { barcodes ->
-                val value = barcodes.firstOrNull { it.rawValue != null }?.rawValue ?: return@addOnSuccessListener
-                val now = System.currentTimeMillis()
-                // Report a new code immediately; repeat the same one only after the cooldown.
-                if (value != lastValue || now - lastReportedAt >= SCAN_COOLDOWN_MS) {
-                    lastValue = value
-                    lastReportedAt = now
-                    onResult(value)
-                }
-            }
+            .addOnSuccessListener { barcodes -> handleBarcodes(barcodes, width, height) }
             .addOnCompleteListener { imageProxy.close() }
     }
+
+    private fun handleBarcodes(barcodes: List<Barcode>, width: Int, height: Int) {
+        val cx = width / 2f
+        val cy = height / 2f
+        val radius = minOf(width, height) * CENTER_RADIUS_FRACTION
+
+        // The aimed-at code: the one whose bounding-box center is nearest the frame center, and only
+        // if it falls within the reticle radius.
+        val value = barcodes
+            .filter { it.rawValue != null && it.boundingBox != null }
+            .minByOrNull { it.boundingBox!!.distanceSquaredTo(cx, cy) }
+            ?.takeIf { it.boundingBox!!.distanceSquaredTo(cx, cy) <= radius * radius }
+            ?.rawValue
+
+        val now = System.currentTimeMillis()
+        if (value == null) {
+            // Nothing aimed at: clear the candidate so a code must dwell again before firing.
+            candidateValue = null
+            return
+        }
+        // Restart the dwell timer whenever the aimed-at value changes.
+        if (value != candidateValue) {
+            candidateValue = value
+            candidateSince = now
+            return
+        }
+        if (now - candidateSince < CENTER_DWELL_MS) return
+
+        // Dwell satisfied: report a new value immediately, repeat the same one only after cooldown.
+        if (value != lastValue || now - lastReportedAt >= SCAN_COOLDOWN_MS) {
+            lastValue = value
+            lastReportedAt = now
+            onResult(value)
+        }
+    }
+}
+
+private fun android.graphics.Rect.distanceSquaredTo(x: Float, y: Float): Float {
+    val dx = exactCenterX() - x
+    val dy = exactCenterY() - y
+    return dx * dx + dy * dy
 }

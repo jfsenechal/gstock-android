@@ -40,6 +40,8 @@
     <!-- Checkout flow -->
     <string name="checkout_step1_title">Step 1 — Scan worker badge</string>
     <string name="checkout_step1_instruction">Point the camera at the worker\'s QR code.</string>
+    <string name="checkout_no_worker_scanned">Point the camera at a worker badge to select them.</string>
+    <string name="checkout_validate_worker">Validate</string>
     <string name="checkout_step2_title">Step 2 — Scan tools</string>
     <string name="checkout_worker_label">Checking out to</string>
     <string name="checkout_step2_instruction">Scan each tool\'s QR code, then tap Finished.</string>
