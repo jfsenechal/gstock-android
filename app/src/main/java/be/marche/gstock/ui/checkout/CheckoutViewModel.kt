@@ -7,6 +7,7 @@ import be.marche.gstock.R
 import be.marche.gstock.core.ApiResult
 import be.marche.gstock.core.GstockCode
 import be.marche.gstock.core.GstockQr
+import be.marche.gstock.core.ScanSoundPlayer
 import be.marche.gstock.data.remote.dto.ToolDto
 import be.marche.gstock.data.remote.dto.WorkerDto
 import be.marche.gstock.data.repository.CheckoutRepository
@@ -38,6 +39,7 @@ data class CheckoutUiState(
 class CheckoutViewModel @Inject constructor(
     private val scanRepository: ScanRepository,
     private val checkoutRepository: CheckoutRepository,
+    private val scanSoundPlayer: ScanSoundPlayer,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -59,8 +61,12 @@ class CheckoutViewModel @Inject constructor(
                     if (worker == null) {
                         _uiState.update { it.copy(isProcessing = false, error = context.getString(R.string.checkout_error_worker_not_recognised)) }
                     } else {
+                        scanSoundPlayer.playSuccess()
+                        // Stay on the scan step and just show the latest worker: pointing the camera at
+                        // another badge on the sheet swaps the selection, so the user can browse and
+                        // then tap Validate to commit the one they want.
                         _uiState.update {
-                            it.copy(isProcessing = false, worker = worker, step = CheckoutStep.SCAN_TOOLS)
+                            it.copy(isProcessing = false, worker = worker)
                         }
                     }
                 }
@@ -92,16 +98,24 @@ class CheckoutViewModel @Inject constructor(
                         tool.isCheckedOut || !tool.isAvailable ->
                             // Already reserved: surface a blocking alert and do not add it.
                             _uiState.update { it.copy(isProcessing = false, reservedTool = tool) }
-                        else ->
+                        else -> {
+                            scanSoundPlayer.playSuccess()
                             _uiState.update {
                                 it.copy(isProcessing = false, tools = it.tools + tool)
                             }
+                        }
                     }
                 }
                 is ApiResult.Error ->
                     _uiState.update { it.copy(isProcessing = false, error = result.message) }
             }
         }
+    }
+
+    /** Validate the currently-selected worker and move on to scanning tools. */
+    fun confirmWorker() {
+        if (_uiState.value.worker == null) return
+        _uiState.update { it.copy(step = CheckoutStep.SCAN_TOOLS, error = null) }
     }
 
     /** Dismiss the "already reserved" alert. */

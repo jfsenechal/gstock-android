@@ -40,6 +40,8 @@
     <!-- Checkout flow -->
     <string name="checkout_step1_title">Étape 1 — Scanner le badge de l\'ouvrier</string>
     <string name="checkout_step1_instruction">Pointez la caméra vers le code QR de l\'ouvrier.</string>
+    <string name="checkout_no_worker_scanned">Pointez la caméra vers un badge d\'ouvrier pour le sélectionner.</string>
+    <string name="checkout_validate_worker">Valider</string>
     <string name="checkout_step2_title">Étape 2 — Scanner les outils</string>
     <string name="checkout_worker_label">Emprunt au nom de</string>
     <string name="checkout_step2_instruction">Scannez le code QR de chaque outil, puis appuyez sur Terminé.</string>
@@ -70,6 +72,10 @@
     <string name="filter_active">Actifs</string>
     <string name="filter_returned">Retournés</string>
     <string name="filter_overdue">En retard</string>
+    <string name="filter_worker_label">Ouvrier</string>
+    <string name="filter_worker_all">Tous les ouvriers</string>
+    <string name="filter_tool_label">Outil</string>
+    <string name="filter_tool_all">Tous les outils</string>
     <string name="checkouts_empty">Aucun emprunt</string>
     <string name="checkout_tool_fallback">Outil n°%1$s</string>
     <string name="checkout_unknown">?</string>

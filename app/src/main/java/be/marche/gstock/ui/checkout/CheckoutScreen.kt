@@ -56,6 +56,7 @@ fun CheckoutScreen(
     CheckoutScreenContent(
         state = state,
         onWorkerScanned = viewModel::onWorkerScanned,
+        onConfirmWorker = viewModel::confirmWorker,
         onToolScanned = viewModel::onToolScanned,
         onRemoveTool = viewModel::removeTool,
         onFinish = viewModel::finish,
@@ -69,6 +70,7 @@ fun CheckoutScreen(
 private fun CheckoutScreenContent(
     state: CheckoutUiState,
     onWorkerScanned: (String) -> Unit,
+    onConfirmWorker: () -> Unit,
     onToolScanned: (String) -> Unit,
     onRemoveTool: (Long) -> Unit,
     onFinish: () -> Unit,
@@ -78,12 +80,10 @@ private fun CheckoutScreenContent(
 ) {
     Box(Modifier.fillMaxSize()) {
         when (state.step) {
-            CheckoutStep.SCAN_WORKER -> ScanStep(
-                title = stringResource(R.string.checkout_step1_title),
-                instruction = stringResource(R.string.checkout_step1_instruction),
-                isProcessing = state.isProcessing,
-                error = state.error,
+            CheckoutStep.SCAN_WORKER -> ScanWorkerStep(
+                state = state,
                 onScanned = onWorkerScanned,
+                onValidate = onConfirmWorker,
             )
 
             CheckoutStep.SCAN_TOOLS -> ScanToolsStep(
@@ -110,46 +110,84 @@ private fun CheckoutScreenContent(
     }
 }
 
+/**
+ * Live worker-scan step: the camera stays on while pointing at the different worker badges on a
+ * sheet swaps the previewed worker. The selection is only committed when the user taps Validate.
+ */
 @Composable
-private fun ScanStep(
-    title: String,
-    instruction: String,
-    isProcessing: Boolean,
-    error: String?,
+private fun ScanWorkerStep(
+    state: CheckoutUiState,
     onScanned: (String) -> Unit,
+    onValidate: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize()) {
-        Column(Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleLarge)
-            Text(instruction, style = MaterialTheme.typography.bodyMedium)
-            if (error != null) {
-                Text(
-                    error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-            }
-        }
-        Box(Modifier.fillMaxSize()) {
-            if (LocalInspectionMode.current) {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text("QR Scanner Placeholder")
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val cameraHeight = (maxHeight * 0.4f).coerceIn(200.dp, 360.dp)
+
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Column(
+                Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(stringResource(R.string.checkout_step1_title), style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.checkout_step1_instruction), style = MaterialTheme.typography.bodyMedium)
+                if (state.error != null) {
+                    Text(
+                        state.error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                 }
-            } else {
-                QrScannerView(
-                    onQrScanned = onScanned,
-                    modifier = Modifier.fillMaxSize(),
-                )
             }
-            if (isProcessing) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(cameraHeight),
+            ) {
+                if (LocalInspectionMode.current) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("QR Scanner Placeholder")
+                    }
+                } else {
+                    QrScannerView(
+                        onQrScanned = onScanned,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                if (state.isProcessing) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+
+            Column(
+                Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (state.worker != null) {
+                    WorkerHeaderCard(state.worker)
+                } else {
+                    Text(
+                        stringResource(R.string.checkout_no_worker_scanned),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                Button(
+                    onClick = onValidate,
+                    enabled = state.worker != null && !state.isProcessing,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.checkout_validate_worker))
                 }
             }
         }
@@ -389,6 +427,28 @@ private fun CheckoutScreenScanWorkerPreview() {
         CheckoutScreenContent(
             state = CheckoutUiState(step = CheckoutStep.SCAN_WORKER),
             onWorkerScanned = {},
+            onConfirmWorker = {},
+            onToolScanned = {},
+            onRemoveTool = {},
+            onFinish = {},
+            onReset = {},
+            onDismissReservedAlert = {},
+            onFinished = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CheckoutScreenScanWorkerSelectedPreview() {
+    GstockTheme {
+        CheckoutScreenContent(
+            state = CheckoutUiState(
+                step = CheckoutStep.SCAN_WORKER,
+                worker = WorkerDto(id = 1L, firstName = "John", lastName = "Doe"),
+            ),
+            onWorkerScanned = {},
+            onConfirmWorker = {},
             onToolScanned = {},
             onRemoveTool = {},
             onFinish = {},
@@ -417,6 +477,7 @@ private fun CheckoutScreenScanToolsPreview() {
                 ),
             ),
             onWorkerScanned = {},
+            onConfirmWorker = {},
             onToolScanned = {},
             onRemoveTool = {},
             onFinish = {},
@@ -437,6 +498,7 @@ private fun CheckoutScreenDonePreview() {
                 resultMessage = "2 tools checked out to John Doe",
             ),
             onWorkerScanned = {},
+            onConfirmWorker = {},
             onToolScanned = {},
             onRemoveTool = {},
             onFinish = {},
